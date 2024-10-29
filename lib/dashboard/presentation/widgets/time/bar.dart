@@ -1,12 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sales_dashboard/dashboard/domain/domain.dart'; // Asegúrate de que tengas acceso a SupermarketSales
+import 'package:sales_dashboard/dashboard/domain/domain.dart';
 
 
 class SalesByHourChart extends StatelessWidget {
   final List<SupermarketSales> salesData;
-  final DateTime? selectedDate; // Agregar el parámetro para la fecha seleccionada
+  final DateTime? selectedDate; 
 
   const SalesByHourChart({
     super.key, 
@@ -23,7 +23,8 @@ class SalesByHourChart extends StatelessWidget {
       return const Center(child: Text('No hay ventas en este rango de fechas.'));
     }
     
-    List<BarChartGroupData> barGroups = salesByHour.entries.map((entry) {
+    List<BarChartGroupData> barGroups = salesByHour.entries
+    .map((entry) {
       final hour = entry.key;
       return BarChartGroupData(
         x: int.parse(hour),
@@ -37,7 +38,10 @@ class SalesByHourChart extends StatelessWidget {
           ),
         ],
       );
-    }).toList();
+    })
+    .toList()
+    ..sort((a, b) => a.x.compareTo(b.x));
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,7 +129,8 @@ class SalesByMonthChart extends StatelessWidget {
     }
 
 
-    List<BarChartGroupData> barGroups = salesByMonth.entries.map((entry) {
+    List<BarChartGroupData> barGroups = salesByMonth.entries
+    .map((entry) {
       final month = int.parse(entry.key);
       return BarChartGroupData(
         x: month,
@@ -139,7 +144,10 @@ class SalesByMonthChart extends StatelessWidget {
           ),
         ],
       );
-    }).toList();
+    })
+    .toList()
+    ..sort((a, b) => a.x.compareTo(b.x)); 
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

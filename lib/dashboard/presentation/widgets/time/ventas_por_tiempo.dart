@@ -11,7 +11,7 @@ class VentasPorTiempoWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final salesDataRepository = ref.watch(salesDataRepositoryProvider);
-    final selectedDate = ref.watch(dateProvider); // Obtenemos la fecha seleccionada
+    final selectedDate = ref.watch(dateProvider); 
 
     return FutureBuilder<List<SupermarketSales>>(
       future: salesDataRepository.getSalesData(),
@@ -31,7 +31,6 @@ class VentasPorTiempoWidget extends ConsumerWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // ExpansionTile para el selector de fechas
                 ExpansionTile(
                   title: const Text('Seleccionar Fecha'),
                   children: [
@@ -48,23 +47,29 @@ class VentasPorTiempoWidget extends ConsumerWidget {
                 const SizedBox(height: 20),
                 SalesByHourChart(
                   salesData: salesData,
-                  selectedDate: selectedDate, // Pasar la fecha seleccionada
+                  selectedDate: selectedDate,
                 ),
                 const SizedBox(height: 20),
                 VentasPorDiaSemanaChart(
                   salesData: salesData,
-                  selectedDate: selectedDate, // Pasar la fecha seleccionada
+                  selectedDate: selectedDate, 
                 ),
                 const SizedBox(height: 20),
                 SalesByMonthChart(
                   salesData: salesData,
-                  selectedDate: selectedDate, // Pasar la fecha seleccionada
+                  selectedDate: selectedDate,
                 ),
                 const SizedBox(height: 20),
                 VentasPorLineaProductoChart(
                   salesData: salesData,
-                  selectedDate: selectedDate, // Pasar la fecha seleccionada
+                  selectedDate: selectedDate, 
                 ),
+                const SizedBox(height: 20),
+                SalesComparisonChart(
+                  salesData: salesData,
+                  selectedDate: selectedDate,
+                )
+
               ],
             ),
           ),
