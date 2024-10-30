@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:sales_dashboard/dashboard/domain/domain.dart';
 import 'package:sales_dashboard/dashboard/presentation/widgets/widgets.dart';
 import '../../provider/providers.dart';
+import 'package:sales_dashboard/dashboard/infrastructure/infrastructure.dart';
 
 class VentasPorTiempoWidget extends ConsumerWidget {
-  const VentasPorTiempoWidget({super.key});
+  final clienteRepository = ClienteRepositoryImpl(IsarClienteDatasource());
 
+  VentasPorTiempoWidget({super.key});
+  
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final salesDataRepository = ref.watch(salesDataRepositoryProvider);
@@ -68,8 +71,12 @@ class VentasPorTiempoWidget extends ConsumerWidget {
                 SalesComparisonChart(
                   salesData: salesData,
                   selectedDate: selectedDate,
-                )
-
+                ),
+                
+                DeudasWidget(
+                  clienteId: 1, // Asegúrate de pasar un clienteId válido
+                  clienteRepository: clienteRepository, // Aquí pasa la instancia concreta
+                ),
               ],
             ),
           ),

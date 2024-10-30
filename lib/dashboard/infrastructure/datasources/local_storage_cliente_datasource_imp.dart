@@ -1,18 +1,17 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-
 import 'package:sales_dashboard/dashboard/domain/domain.dart';
 
 class IsarClienteDatasource implements ClienteDatasource {
   late Future<Isar> _isar;
 
   IsarClienteDatasource() {
-    _initDB();
+    _isar = _initDB(); // Asigna el resultado de la inicialización
   }
 
-  Future<void> _initDB() async {
+  Future<Isar> _initDB() async {
     final dir = await getApplicationDocumentsDirectory();
-    _isar = Isar.open([ClienteSchema, DeudaSchema], directory: dir.path);
+    return Isar.open([ClienteSchema, DeudaSchema, PagoSchema], directory: dir.path);
   }
 
   @override
@@ -25,8 +24,17 @@ class IsarClienteDatasource implements ClienteDatasource {
   Future<void> insertarDeuda(Deuda deuda, Cliente cliente) async {
     final isar = await _isar;
     await isar.writeTxn(() async {
+      // Vincula la deuda con el cliente
+      deuda.cliente.value = cliente;
+      await isar.deudas.put(deuda); // Guarda la deuda en la base de datos
+      
+      // Agrega la deuda al cliente y guarda el cliente actualizado
       cliente.deudas.add(deuda);
-      await isar.clientes.put(cliente);
+      await isar.clientes.put(cliente); // Guarda el cliente en la base de datos
+      
+      // Asegura que las relaciones se actualicen en la base de datos
+      await cliente.deudas.save();
+      await deuda.cliente.save();
     });
   }
 
@@ -40,29 +48,37 @@ class IsarClienteDatasource implements ClienteDatasource {
   Future<List<Deuda>> obtenerDeudasDeCliente(int clienteId) async {
     final isar = await _isar;
     final cliente = await isar.clientes.get(clienteId);
+
     if (cliente != null) {
+      await cliente.deudas.load(); // Carga la relación explícitamente
       return cliente.deudas.toList();
     } else {
       return [];
     }
   }
-  ///*********************************************************************************/
-    @override
+
+  @override
   Future<void> abonarDeuda(int deudaId, double monto) async {
     final isar = await _isar;
     final deuda = await isar.deudas.get(deudaId);
     if (deuda != null) {
       deuda.totalDeAbono += monto;
-      deuda.fechaUltimoAbono = DateTime.now(); // Actualiza la fecha de último abono
-      await isar.writeTxn(() => isar.deudas.put(deuda));
-
-      // Aquí puedes almacenar el abono en la tabla de pagos
+      deuda.fechaUltimoAbono = DateTime.now();
+      
+      await isar.writeTxn(() async {
+        await isar.deudas.put(deuda);
+        print('Deuda actualizada: ${deuda.totalDeAbono}, Último abono: ${deuda.fechaUltimoAbono}');
+      });
+      
+      // Inserta el abono en pagos
       final pago = Pago(
         montoDeAbono: monto,
         fechaPago: DateTime.now(),
         deuda: deuda,
       );
       await isar.writeTxn(() => isar.pagos.put(pago));
+    } else {
+      print('Error: Deuda no encontrada');
     }
   }
 
@@ -78,14 +94,24 @@ class IsarClienteDatasource implements ClienteDatasource {
       .findAll();
   }
 
+  @override
+  Future<List<Deuda>> obtenerDeudasMesesAnteriores(DateTime fechaConsulta) async {
+    final isar = await _isar;
 
+    // Calcula la fecha de hace un mes
+    final fechaLimite = DateTime(fechaConsulta.year, fechaConsulta.month - 1, fechaConsulta.day);
+
+    return await isar.deudas.filter()
+      .fechaUltimoAbonoLessThan(fechaLimite)
+      .findAll();
+  }
 
   double sumarPagos(List<Pago> pagos) {
     return pagos.fold<double>(0.0, (sum, pago) => sum + (pago.montoDeAbono));
   }
 
   @override
-    Future<double> obtenerTotalAbonosMes(DateTime fechaConsulta) async {
+  Future<double> obtenerTotalAbonosMes(DateTime fechaConsulta) async {
     final isar = await _isar;
 
     final inicioMes = DateTime(fechaConsulta.year, fechaConsulta.month, 1);
@@ -101,5 +127,4 @@ class IsarClienteDatasource implements ClienteDatasource {
 
     return sumarPagos(pagos);
   }
-  
 }

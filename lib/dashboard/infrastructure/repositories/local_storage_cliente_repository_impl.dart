@@ -35,7 +35,10 @@ class ClienteRepositoryImpl implements ClienteRepository {
   Future<List<Deuda>> obtenerDeudasMesDiferente(DateTime fechaConsulta) async {
     return await _datasource.obtenerDeudasMesDiferente(fechaConsulta);
   }
-
+  @override
+  Future<List<Deuda>> obtenerDeudasMesesAnteriores(DateTime fechaConsulta) async {
+    return await _datasource.obtenerDeudasMesesAnteriores(fechaConsulta);
+  }
   @override
   Future<double> obtenerTotalAbonosMes(DateTime fechaConsulta) async {
     return await _datasource.obtenerTotalAbonosMes(fechaConsulta);

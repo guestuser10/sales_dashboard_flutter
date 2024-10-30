@@ -9,4 +9,5 @@ abstract class ClienteDatasource {
   Future<void> abonarDeuda(int deudaId, double monto);
   Future<List<Deuda>> obtenerDeudasMesDiferente(DateTime fechaConsulta);
   Future<double> obtenerTotalAbonosMes(DateTime fechaConsulta);
+  Future<List<Deuda>> obtenerDeudasMesesAnteriores(DateTime now);
 }

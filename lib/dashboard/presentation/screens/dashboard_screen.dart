@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/time/ventas_por_tiempo.dart'; // Asegúrate de importar el widget VentasPorTiempoWidget
+import 'package:sales_dashboard/dashboard/infrastructure/datasources/local_storage_cliente_datasource_imp.dart';
+import 'package:sales_dashboard/dashboard/infrastructure/repositories/local_storage_cliente_repository_impl.dart';
+import 'package:sales_dashboard/dashboard/presentation/widgets/shared/pagos.dart';
+import 'package:sales_dashboard/dashboard/presentation/widgets/shared/progress_graph.dart';
+import '../widgets/time/ventas_por_tiempo.dart';
 
 class DashboardScreen extends StatelessWidget {
   static const String name = 'dashboard';
@@ -15,19 +19,32 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Gráficas de Venta'),
       ),
-      body: const _DashboardView(),
+      body:  _DashboardView(),
     );
   }
 }
 
 class _DashboardView extends StatelessWidget {
-  const _DashboardView();
+  _DashboardView();
+  final clienteRepository = ClienteRepositoryImpl(IsarClienteDatasource());
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(5.0),
-      child: VentasPorTiempoWidget(),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            DeudaProgressBar(clienteRepository: clienteRepository),
+            const SizedBox(height: 20),
+            DeudasWidget(
+              clienteId: 1, 
+              clienteRepository: clienteRepository, 
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
