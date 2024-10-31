@@ -35,9 +35,9 @@ class _DashboardView extends StatelessWidget {
         padding: const EdgeInsets.all(5.0),
         child: Column(
           children: [
-            const SizedBox(height: 10),
-            DeudaProgressBar(clienteRepository: clienteRepository),
-            const SizedBox(height: 20),
+            // const SizedBox(height: 10),
+            // DeudaProgressBar(clienteRepository: clienteRepository),
+            // const SizedBox(height: 20),
             DeudasWidget(
               clienteId: 1, 
               clienteRepository: clienteRepository, 

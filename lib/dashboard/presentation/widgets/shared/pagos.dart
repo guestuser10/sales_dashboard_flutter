@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sales_dashboard/dashboard/domain/domain.dart';
+import 'package:sales_dashboard/dashboard/presentation/widgets/shared/progress_graph.dart';
 
 class DeudasWidget extends StatefulWidget {
   final int clienteId;
@@ -18,20 +19,20 @@ class DeudasWidget extends StatefulWidget {
 }
 
 class DeudasWidgetState extends State<DeudasWidget> {
-  late Future<Isar> _isarFuture; // Aquí inicializamos Isar
+  late Future<Isar> _isarFuture;
   late Future<List<Deuda>> _deudasFuture;
 
   @override
   void initState() {
     super.initState();
-    _isarFuture = _initializeIsar(); 
+    _isarFuture = _initializeIsar();
     //insertarDatosDePrueba(widget.clienteRepository);
-    loadDeudas(); 
+    loadDeudas();
   }
 
   Future<Isar> _initializeIsar() async {
     final dir = await getApplicationDocumentsDirectory();
-    Future<Isar> isar = Isar.open([ClienteSchema, DeudaSchema, PagoSchema], directory: dir.path); 
+    Future<Isar> isar = Isar.open([ClienteSchema, DeudaSchema, PagoSchema], directory: dir.path);
     return isar;
   }
 
@@ -49,7 +50,7 @@ class DeudasWidgetState extends State<DeudasWidget> {
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Ajuste para el teclado
+            bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 16,
             right: 16,
             top: 16,
@@ -67,16 +68,16 @@ class DeudasWidgetState extends State<DeudasWidget> {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7, // 70% del ancho de la pantalla
+                width: MediaQuery.of(context).size.width * 0.7,
                 child: ElevatedButton(
                   onPressed: () async {
                     final monto = double.tryParse(abonoController.text);
                     if (monto != null && monto > 0) {
                       await widget.clienteRepository.abonarDeuda(deudaId, monto);
                       setState(() {
-                        loadDeudas(); // Refrescar
+                        loadDeudas();
                       });
-                      Navigator.pop(context); // Cerrar modal después del abono
+                      Navigator.pop(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Por favor ingrese un monto válido')),
@@ -96,17 +97,25 @@ class DeudasWidgetState extends State<DeudasWidget> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Isar>(
-      future: _isarFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Error al conectar con la base de datos'));
-        }
+  future: _isarFuture,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (snapshot.hasError) {
+      return const Center(child: Text('Error al conectar con la base de datos'));
+    }
 
-        return SingleChildScrollView(
+    return Expanded(
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height, // Establece un tamaño mínimo
+          ),
           child: Column(
             children: [
+              const SizedBox(height: 10),
+              DeudaProgressBar(clienteRepository: widget.clienteRepository),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -115,7 +124,7 @@ class DeudasWidgetState extends State<DeudasWidget> {
                 },
                 child: const Text('Actualizar deudores'),
               ),
-              const SizedBox(height: 16), // margen entre el botón y la lista de deudas
+              const SizedBox(height: 16),
               FutureBuilder<List<Deuda>>(
                 future: _deudasFuture,
                 builder: (context, snapshot) {
@@ -128,8 +137,12 @@ class DeudasWidgetState extends State<DeudasWidget> {
                   }
 
                   final deudas = snapshot.data!;
-                  return Column(
-                    children: deudas.map((deuda) {
+                  return ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: deudas.length,
+                    itemBuilder: (context, index) {
+                      final deuda = deudas[index];
                       final nombreCliente = deuda.cliente.value?.nombre ?? 'Cliente desconocido';
 
                       return GestureDetector(
@@ -175,15 +188,18 @@ class DeudasWidgetState extends State<DeudasWidget> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    },
                   );
                 },
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
+  },
+);
+
   }
 }
 
@@ -191,7 +207,10 @@ class DeudasWidgetState extends State<DeudasWidget> {
 Future<int> insertarDatosDePrueba(ClienteRepository clienteRepository) async {
   final sar = Isar.getInstance();
   await sar?.writeTxn(() async {
-    await sar.clear(); // Limpiar la base de datos
+    await sar.clear();
+    await sar.clientes.clear();
+    await sar.deudas.clear();
+    await sar.pagos.clear();
   });
 
   // Crear una lista de clientes de prueba
